@@ -3,6 +3,7 @@ from flask_pymongo import PyMongo
 from werkzeug.security import generate_password_hash,check_password_hash
 from bson import json_util
 from bson.objectid import ObjectId
+from models import save_user
 
 app=Flask(__name__)
 app.config['MONGO_URI']='mongodb://localhost/teststore'
@@ -85,6 +86,18 @@ def not_found(error=None):
     })
     mensaje.status_code=404
     return mensaje
+
+@app.route('/registro',methods=['POST'])
+def registrar_usuario():
+    res=save_user(request.form,mongo)
+    if res!=0:
+        response=jsonify({'mensaje':'Usuario agregado','ok':True,'id':res})
+        response.status_code=200
+        return response
+    else:   
+        response=jsonify({'mensaje':'Usuario no agregado','ok':False})
+        response.status_code=500
+        return response
 
 if __name__=="__main__":
     app.run(debug=True)
