@@ -1,16 +1,27 @@
 from flask import Flask,request,jsonify,Response
 from flask_pymongo import PyMongo
 from werkzeug.security import generate_password_hash,check_password_hash
+from werkzeug.utils import secure_filename
 from bson import json_util
 from bson.objectid import ObjectId
 from models import save_user
+from flask_cors import CORS, cross_origin
+import os
+
+
+UPLOAD_FOLDER = '/uploads'
+ALLOWED_EXTENSIONS = {'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif'}
 
 app=Flask(__name__)
 app.config['MONGO_URI']='mongodb://localhost/teststore'
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+cors = CORS(app)
+app.config['CORS_HEADERS'] = 'Content-Type'
 
 mongo=PyMongo(app)
 
 @app.route('/users',methods=['GET'])
+@cross_origin()
 def get_users():
     users=mongo.db.users.find()
     response=json_util.dumps(users)
@@ -88,8 +99,10 @@ def not_found(error=None):
     return mensaje
 
 @app.route('/registro',methods=['POST'])
+@cross_origin()
 def registrar_usuario():
     res=save_user(request.form,mongo)
+    
     if res!=0:
         response=jsonify({'mensaje':'Usuario agregado','ok':True,'id':res})
         response.status_code=200
@@ -98,6 +111,10 @@ def registrar_usuario():
         response=jsonify({'mensaje':'Usuario no agregado','ok':False})
         response.status_code=500
         return response
+
+@app.route('/upload',methods=['POST'])
+def upload_file():
+    pass
 
 if __name__=="__main__":
     app.run(debug=True)
